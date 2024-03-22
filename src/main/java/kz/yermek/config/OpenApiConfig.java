@@ -22,7 +22,7 @@ import io.swagger.v3.oas.annotations.servers.Server;
         servers = {
                 @Server(
                         description = "Local environment",
-                        url = "https://localhost:8080"
+                        url = "https://cookscorner-production-6571.up.railway.app"
                 )
         }
 )
