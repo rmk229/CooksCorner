@@ -1,0 +1,51 @@
+package kz.yermek.services.impl;
+
+import jakarta.transaction.Transactional;
+import kz.yermek.models.Image;
+import kz.yermek.repositories.ImageRepository;
+import kz.yermek.services.CloudinaryService;
+import kz.yermek.services.ImageService;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+@Service
+public class ImageServiceImpl implements ImageService {
+    private final ImageRepository imageRepository;
+    private final CloudinaryService cloudinaryService;
+
+    public ImageServiceImpl(ImageRepository imageRepository, CloudinaryService cloudinaryService) {
+        this.imageRepository = imageRepository;
+        this.cloudinaryService = cloudinaryService;
+    }
+
+    @Override
+    @Transactional
+    public Image saveImage(MultipartFile file) {
+        Image image = new Image();
+        try {
+
+            image.setUrl(cloudinaryService.uploadFile(file, "Recipes picture"));
+            imageRepository.save(image);
+        }catch (Exception exception){
+            throw new RuntimeException("Image upload failed: " + exception.getMessage());
+        }
+
+        return image;
+
+    }
+
+    @Override
+    @Transactional
+    public Image saveUserImage(MultipartFile file) {
+        Image image = new Image();
+        try {
+
+            image.setUrl(cloudinaryService.uploadFile(file, "Chefs profile picture"));
+            imageRepository.save(image);
+        }catch (Exception exception){
+            throw new RuntimeException("Image upload failed: " + exception.getMessage());
+        }
+
+        return image;
+    }
+}
