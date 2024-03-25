@@ -43,11 +43,10 @@ public class RecipeServiceImpl implements RecipeService {
         recipe.setDescription(requestDto.description());
         recipe.setImage(imageService.saveImage(image));
         recipe.setCookingTime(requestDto.cookingTime());
-
-        User user = userRepository.findById(userId).orElseThrow(() -> new UsernameNotFoundException("USer not found"));
+        User user = userRepository.findById(userId).orElseThrow(()-> new UsernameNotFoundException("User not found"));
         recipe.setCreatedBy(user);
         List<Ingredient> ingredients = new ArrayList<>();
-        for (Ingredient ingredient : requestDto.ingredients()) {
+        for(Ingredient ingredient: requestDto.ingredients()){
             Ingredient ingredient1 = new Ingredient();
             ingredient1.setRecipe(recipe);
             ingredient1.setName(ingredient.getName());

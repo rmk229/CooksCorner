@@ -10,6 +10,7 @@ import kz.yermek.dto.UserDto;
 import kz.yermek.dto.UserProfileDto;
 import kz.yermek.dto.UserUpdateProfileDto;
 import kz.yermek.services.UserService;
+import kz.yermek.util.JsonValidator;
 import kz.yermek.util.JwtTokenUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -33,7 +34,7 @@ public class UserController {
     private final JwtTokenUtils tokenUtils;
     private final UserService userService;
     private final ObjectMapper objectMapper;
-    private final Validator validator;
+    private final JsonValidator jsonValidator;
 
 
     @Operation(
@@ -98,35 +99,33 @@ public class UserController {
             }
     )
     @PutMapping(value = "/update-profile")
-    public ResponseEntity<String> changeProfile(@RequestPart("dto") String dto,
+    public ResponseEntity<String> changeProfile(@RequestPart("dto") String profileDto,
                                                 @RequestPart(value = "image", required = false) MultipartFile image,
                                                 Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
-        }
-
-        UserUpdateProfileDto request;
-        Long currentUserId = tokenUtils.getUserIdFromAuthentication(authentication);
         try {
-            request = objectMapper.readValue(dto, UserUpdateProfileDto.class);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-        validateRequest(request);
-        if (image != null) {
-            if (!Objects.requireNonNull(image.getContentType()).startsWith("image/")) {
-                throw new IllegalArgumentException("Uploaded file is not an image");
+            if (authentication == null || !authentication.isAuthenticated()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication required");
             }
+            UserUpdateProfileDto request = objectMapper.readValue(profileDto, UserUpdateProfileDto.class);
+            jsonValidator.validateUserRequest(request);
+
+            if (image != null && !isImageFile(image)) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("The file is not an image");
+            }
+            Long currentUserId = tokenUtils.getUserIdFromAuthentication(authentication);
+            String responseMessage = userService.updateUser(request, currentUserId, image);
+            return ResponseEntity.ok(responseMessage);
+        } catch (JsonProcessingException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid profile DTO JSON: " + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to update profile: " + e.getMessage());
         }
-        return ResponseEntity.ok(userService.updateUser(request, currentUserId, image));
     }
 
-    private void validateRequest(UserUpdateProfileDto request) {
-        BindingResult bindingResult = new BeanPropertyBindingResult(request, "userUpdateProfileDto");
-        validator.validate(request, bindingResult);
-
-        if (bindingResult.hasErrors()) {
-            throw new IllegalArgumentException("Invalid input " + bindingResult.getAllErrors());
-        }
+    private boolean isImageFile(MultipartFile file) {
+        String contentType = file.getContentType();
+        return contentType != null && contentType.startsWith("image/");
     }
 }

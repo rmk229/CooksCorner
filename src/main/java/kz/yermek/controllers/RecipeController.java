@@ -1,5 +1,7 @@
 package kz.yermek.controllers;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -8,6 +10,7 @@ import kz.yermek.dto.RecipeListDto;
 import kz.yermek.dto.request.RecipeRequestDto;
 import kz.yermek.enums.Category;
 import kz.yermek.services.RecipeService;
+import kz.yermek.util.JsonValidator;
 import kz.yermek.util.JwtTokenUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -25,6 +28,8 @@ import java.util.List;
 public class RecipeController {
     private final RecipeService recipeService;
     private final JwtTokenUtils tokenUtils;
+    private final ObjectMapper objectMapper;
+    private final JsonValidator jsonValidator;
 
     @Operation(
             summary = "Get recipes by category",
@@ -142,13 +147,33 @@ public class RecipeController {
             }
     )
     @PostMapping("/add-recipe")
-    public ResponseEntity<String> addRecipe(@RequestPart("recipeDto") RecipeRequestDto requestDto, @RequestPart ("photo") MultipartFile image, Authentication authentication){
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication required");
+    public ResponseEntity<String> addRecipe(@RequestPart("recipeDto") String recipeDto,
+                                            @RequestPart("photo") MultipartFile image,
+                                            Authentication authentication) {
+        try {
+            if (authentication == null || !authentication.isAuthenticated()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication required");
+            }
+            Long userId = tokenUtils.getUserIdFromAuthentication(authentication);
+            RecipeRequestDto requestDto = objectMapper.readValue(recipeDto, RecipeRequestDto.class);
+            jsonValidator.validateRecipeRequest(requestDto);
+            if (image == null || image.isEmpty() || !isImageFile(image)) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid image file");
+            }
+            recipeService.addRecipe(requestDto, image, userId);
+            return ResponseEntity.ok("Recipe has been added successfully");
+        } catch (JsonProcessingException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid recipe DTO JSON: " + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to add recipe: " + e.getMessage());
         }
-        Long userId = tokenUtils.getUserIdFromAuthentication(authentication);
-        recipeService.addRecipe(requestDto, image, userId);
-        return ResponseEntity.ok("Recipe has been added successfully");
+    }
+
+    private boolean isImageFile(MultipartFile file) {
+        String contentType = file.getContentType();
+        return contentType != null && contentType.startsWith("image/");
     }
 
 
