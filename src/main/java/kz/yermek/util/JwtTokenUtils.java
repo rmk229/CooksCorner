@@ -69,105 +69,31 @@ public class JwtTokenUtils {
         }
         return null;
     }
-//    public String getEmail(String token) {
-//        return  Jwts.parser()
-//                .verifyWith(getAccessKey())
-//                .build()
-//                .parseSignedClaims(token)
-//                .getPayload()
-//                .getSubject();
-//    }
-
     public String getEmail(String token) {
-        try {
-            Jws<Claims> claimsJws = Jwts.parserBuilder()
-                    .setSigningKey(getAccessKey())
-                    .build()
-                    .parseClaimsJws(token);
-            return claimsJws.getBody().getSubject();
-        } catch (Exception e) {
-            // Handle token parsing errors
-            System.out.println("Error parsing JWT token: " + e.getMessage());
-            return null; // or throw a custom exception
-        }
+        return  Jwts.parser()
+                .verifyWith(getAccessKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .getSubject();
     }
     public String getEmailFromRefreshToken(String refreshToken) {
-        try {
-            Jws<Claims> claimsJws = Jwts.parserBuilder()
-                    .setSigningKey(getRefreshKey())
-                    .build()
-                    .parseClaimsJws(refreshToken);
-            return claimsJws.getBody().getSubject();
-        } catch (Exception e) {
-            // Handle token parsing errors
-            System.out.println("Error parsing refresh token: " + e.getMessage());
-            return null; // or throw a custom exception
-        }
+        return Jwts.parser()
+                .verifyWith(getRefreshKey())
+                .build()
+                .parseSignedClaims(refreshToken)
+                .getPayload()
+                .getSubject();
     }
-    private Claims getAllClaimsFromToken(String token) {
-        try {
-            Jws<Claims> claimsJws = Jwts.parserBuilder()
-                    .setSigningKey(getAccessKey())
-                    .build()
-                    .parseClaimsJws(token);
-            return claimsJws.getBody();
-        } catch (Exception e) {
-            // Handle token parsing errors
-            System.out.println("Error parsing token: " + e.getMessage());
-            return null; // or throw a custom exception
-        }
+    private Claims getAllClaimsFromToken(String token){
+        return Jwts
+                .parser()
+                .setSigningKey(getAccessKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+
     }
-
-//    public String getEmailFromRefreshToken(String refreshToken) {
-//        try {
-//            return Jwts.parserBuilder()
-//                    .setSigningKey(getRefreshKey())
-//                    .build()
-//                    .parseClaimsJws(refreshToken)
-//                    .getBody()
-//                    .getSubject();
-//        } catch (ExpiredJwtException e) {
-//            // Handle token expiration gracefully
-//            System.out.println("Refresh token has expired: " + e.getMessage());
-//            // Example: Redirect the user to re-authenticate or generate a new token
-//            return null; // or perform appropriate action
-//        } catch (SignatureException e) {
-//            // Handle signature mismatch or invalid token signature
-//            System.out.println("Invalid token signature: " + e.getMessage());
-//            // Example: Log the error and reject the token
-//            return null; // or perform appropriate action
-//        } catch (MalformedJwtException e) {
-//            // Handle malformed JWT token
-//            System.out.println("Malformed JWT token: " + e.getMessage());
-//            // Example: Log the error and reject the token
-//            return null; // or perform appropriate action
-//        } catch (Exception e) {
-//            // Handle other exceptions such as invalid token format or parsing errors
-//            System.out.println("Error parsing refresh token: " + e.getMessage());
-//            return null; // or throw a custom exception
-//        }
-//    }
-
-
-//    private Claims getAllClaimsFromToken(String token) {
-//        try {
-//            return Jwts.parserBuilder()
-//                    .setSigningKey(getAccessKey())
-//                    .build()
-//                    .parseClaimsJws(token)
-//                    .getBody();
-//        } catch (ExpiredJwtException e) {
-//            // Handle token expiration here
-//            System.out.println("JWT token has expired: " + e.getMessage());
-//            return null; // or throw a custom exception
-//        } catch (Exception e) {
-//            // Handle other exceptions such as invalid token format or signature
-//            System.out.println("Error parsing JWT token: " + e.getMessage());
-//            return null; // or throw a custom exception
-//        }
-//    }
-
-
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = getAllClaimsFromToken(token);
         return claimsResolver.apply(claims);
