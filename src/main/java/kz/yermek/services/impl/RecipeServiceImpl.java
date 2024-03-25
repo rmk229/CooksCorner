@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional;
 import kz.yermek.dto.IngredientDto;
 import kz.yermek.dto.RecipeDto;
 import kz.yermek.dto.RecipeListDto;
+import kz.yermek.dto.request.IngredientRequestDto;
 import kz.yermek.dto.request.RecipeRequestDto;
 import kz.yermek.enums.Category;
 import kz.yermek.enums.Difficulty;
@@ -46,11 +47,11 @@ public class RecipeServiceImpl implements RecipeService {
         User user = userRepository.findById(userId).orElseThrow(()-> new UsernameNotFoundException("User not found"));
         recipe.setCreatedBy(user);
         List<Ingredient> ingredients = new ArrayList<>();
-        for(Ingredient ingredient: requestDto.ingredients()){
+        for(IngredientRequestDto ingredient: requestDto.ingredients()){
             Ingredient ingredient1 = new Ingredient();
             ingredient1.setRecipe(recipe);
-            ingredient1.setName(ingredient.getName());
-            ingredient1.setAmount(ingredient.getAmount());
+            ingredient1.setName(ingredient.name());
+            ingredient1.setAmount(ingredient.weight());
             ingredients.add(ingredient1);
         }
         recipe.setIngredients(ingredients);
