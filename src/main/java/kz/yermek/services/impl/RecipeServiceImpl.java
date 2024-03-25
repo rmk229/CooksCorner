@@ -60,17 +60,16 @@ public class RecipeServiceImpl implements RecipeService {
 
     @Override
     public ResponseEntity<List<RecipeListDto>> getByCategory(Category category, Long userId) {
-        User user = userRepository.findById(userId).orElseThrow(() ->
-                new UsernameNotFoundException("User not found"));
         List<Recipe> recipes = recipeRepository.findPopularRecipes(category);
+
         List<RecipeListDto> recipesDto = recipes.stream().map(recipe -> {
             int likesCount = recipe.getLikes().size();
             int savesCount = recipe.getSaves().size();
             boolean isLikedByUser = isLiked(recipe.getId(), userId);
             boolean isSavedByUser = isSaved(recipe.getId(), userId);
-
             String imageUrl = (recipe.getImage() != null) ? recipe.getImage().getUrl() : null;
             return new RecipeListDto(
+                    recipe.getId(),
                     imageUrl,
                     recipe.getRecipeName(),
                     recipe.getCreatedBy().getName(),
@@ -78,6 +77,7 @@ public class RecipeServiceImpl implements RecipeService {
                     savesCount,
                     isSavedByUser,
                     isLikedByUser
+
             );
         }).collect(Collectors.toList());
         if (recipesDto.isEmpty()) {
@@ -114,14 +114,14 @@ public class RecipeServiceImpl implements RecipeService {
     }
 
     @Override
-    public boolean isLiked(Long recipeId, Long userId){
-        Recipe recipe = recipeRepository.findById(recipeId).orElseThrow(()-> new RecipeNotFoundException("Recipe not found"));
+    public boolean isLiked(Long recipeId, Long userId) {
+        Recipe recipe = recipeRepository.findById(recipeId).orElseThrow(() -> new RecipeNotFoundException("Recipe not found"));
         return recipe != null && recipe.getLikes().stream().anyMatch(user -> user.getId().equals(userId));
     }
 
     @Override
-    public  boolean isSaved(Long recipeId, Long userId){
-        Recipe recipe = recipeRepository.findById(recipeId).orElseThrow(()-> new RecipeNotFoundException("Recipe not found"));
+    public boolean isSaved(Long recipeId, Long userId) {
+        Recipe recipe = recipeRepository.findById(recipeId).orElseThrow(() -> new RecipeNotFoundException("Recipe not found"));
         return recipe != null && recipe.getSaves().stream().anyMatch(user -> user.getId().equals(userId));
     }
 
@@ -136,6 +136,7 @@ public class RecipeServiceImpl implements RecipeService {
             boolean isSaved = isSaved(recipe.getId(), currentUserId);
             String imageUrl = (recipe.getImage() != null) ? recipe.getImage().getUrl() : null;
             RecipeListDto dto = new RecipeListDto(
+                    recipe.getId(),
                     imageUrl,
                     recipe.getRecipeName(),
                     recipe.getCreatedBy().getName(),
@@ -163,6 +164,7 @@ public class RecipeServiceImpl implements RecipeService {
 
             String imageUrl = (recipe.getImage() != null) ? recipe.getImage().getUrl() : null;
             return new RecipeListDto(
+                    recipe.getId(),
                     imageUrl,
                     recipe.getRecipeName(),
                     recipe.getCreatedBy().getName(),
@@ -188,6 +190,7 @@ public class RecipeServiceImpl implements RecipeService {
             String imageUrl = (recipe.getImage() != null) ? recipe.getImage().getUrl() : null;
 
             return new RecipeListDto(
+                    recipe.getId(),
                     imageUrl,
                     recipe.getRecipeName(),
                     recipe.getCreatedBy().getName(),
@@ -218,6 +221,7 @@ public class RecipeServiceImpl implements RecipeService {
 
             String imageUrl = (recipe.getImage() != null) ? recipe.getImage().getUrl() : null;
             return new RecipeListDto(
+                    recipe.getId(),
                     imageUrl,
                     recipe.getRecipeName(),
                     recipe.getCreatedBy().getName(),
@@ -233,5 +237,4 @@ public class RecipeServiceImpl implements RecipeService {
             return ResponseEntity.ok(recipesDto);
         }
     }
-
 }

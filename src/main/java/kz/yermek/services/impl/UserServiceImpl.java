@@ -256,11 +256,12 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public ResponseEntity<MyProfileDto> getOwnProfile(Long currentUserId) {
-        User user = userRepository.findById(currentUserId).orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        User user = userRepository.findById(currentUserId).orElseThrow(()-> new UsernameNotFoundException("User not found"));
         List<Recipe> recipeListDto = recipeRepository.findRecipesByUserId(currentUserId);
+        String photoUrl = (user.getPhoto() != null) ? user.getPhoto().getUrl() : "https://t4.ftcdn.net/jpg/03/32/59/65/240_F_332596535_lAdLhf6KzbW6PWXBWeIFTovTii1drkbT.jpg";
         MyProfileDto userProfileDto = new MyProfileDto(
-                user.getPhoto().getUrl(),
-                user.getUsername(),
+                photoUrl,
+                user.getName(),
                 recipeListDto.size(),
                 user.getFollowers().size(),
                 user.getFollowings().size(),

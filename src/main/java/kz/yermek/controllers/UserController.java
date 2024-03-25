@@ -45,7 +45,7 @@ public class UserController {
                     @ApiResponse(responseCode = "403", description = "Authentication required")
             }
     )
-    @GetMapping("/get_user_profile/{userId}")
+    @GetMapping("/get-user-profile/{userId}")
     public ResponseEntity<UserProfileDto> getRecipesByUser(@PathVariable Long userId, Authentication authentication){
 
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -77,7 +77,7 @@ public class UserController {
                     @ApiResponse(responseCode = "403", description = "Authentication required")
             }
     )
-    @GetMapping("/my_profile")
+    @GetMapping("/my-profile")
     public ResponseEntity<MyProfileDto> getRecipesByUser(Authentication authentication){
 
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -97,7 +97,7 @@ public class UserController {
                     @ApiResponse(responseCode = "403", description = "Authentication required")
             }
     )
-    @PutMapping(value = "/update_profile")
+    @PutMapping(value = "/update-profile")
     public ResponseEntity<String> changeProfile(@RequestPart("dto") String dto,
                                                 @RequestPart(value = "image", required = false) MultipartFile image,
                                                 Authentication authentication) {
