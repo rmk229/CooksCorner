@@ -35,17 +35,7 @@ public class ImageServiceImpl implements ImageService {
     }
 
     @Override
-    @Transactional
-    public Image saveUserImage(MultipartFile file) {
-        Image image = new Image();
-        try {
-
-            image.setUrl(cloudinaryService.uploadFile(file, "Chefs profile picture"));
-            imageRepository.save(image);
-        }catch (Exception exception){
-            throw new RuntimeException("Image upload failed: " + exception.getMessage());
-        }
-
-        return image;
+    public void deleteUserImage(Long id) {
+        imageRepository.deleteById(id);
     }
 }

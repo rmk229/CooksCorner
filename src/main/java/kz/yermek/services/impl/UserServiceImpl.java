@@ -50,9 +50,9 @@ public class UserServiceImpl implements UserService {
     private final EmailService emailService;
     private final TokenRepository tokenRepository;
     private final ImageService imageService;
-
     private final RecipeRepository recipeRepository;
     private static final String EMAIL_LINK = "https://cookscorner-production-6571.up.railway.app/api/v1/auth/confirm-email?token=";
+//    private static final String EMAIL_LINK = "http://localhost:8080/api/v1/auth/confirm-email?token=";
 
     @Override
     @Transactional
@@ -153,13 +153,12 @@ public class UserServiceImpl implements UserService {
     @Override
     public Token generateToken(User user) {
         String token = UUID.randomUUID().toString();
-        Token confirmationToken = new Token(
+        return new Token(
                 token,
                 LocalDateTime.now(),
                 LocalDateTime.now().plusMinutes(5),
                 null,
                 user);
-        return confirmationToken;
     }
 
     @Override
@@ -217,9 +216,12 @@ public class UserServiceImpl implements UserService {
         List<User> users = userRepository.searchUsers(query);
         List<UserDto> userDto = new ArrayList<>();
 
-        for (User user : users) {
+        for(User user: users){
+            String photoUrl = (user.getPhoto() != null) ? user.getPhoto().getUrl() : "https://t4.ftcdn.net/jpg/03/32/59/65/240_F_332596535_lAdLhf6KzbW6PWXBWeIFTovTii1drkbT.jpg";
             UserDto dto = new UserDto(
-                    user.getPhoto().getUrl(), user.getUsername()
+                    user.getId(),
+                    user.getName(),
+                    photoUrl
             );
             userDto.add(dto);
         }
@@ -231,14 +233,25 @@ public class UserServiceImpl implements UserService {
     public void changeProfile(UserUpdateProfileDto dto, MultipartFile photo, Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
         user.setName(dto.name());
         user.setBio(dto.bio());
+
         if (photo != null && !photo.isEmpty()) {
-            String imageUrl = imageService.saveUserImage(photo).getUrl();
-            Image image = new Image();
-            image.setUrl(imageUrl);
-            user.setPhoto(image);
+            try {
+                String imageUrl = imageService.saveImage(photo).getUrl();
+                Image newImage = new Image();
+                newImage.setUrl(imageUrl);
+                if (user.getPhoto() != null) {
+                    imageService.deleteUserImage(user.getPhoto().getId());
+                }
+
+                user.setPhoto(newImage);
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to process image", e);
+            }
         }
+
         userRepository.save(user);
     }
 
@@ -255,6 +268,19 @@ public class UserServiceImpl implements UserService {
                 user.getBio()
         );
         return ResponseEntity.ok(userProfileDto);
+    }
+
+    @Override
+    public String updateUser(UserUpdateProfileDto request, Long currentUserId, MultipartFile image) {
+        User user = userRepository.findById(currentUserId).orElseThrow(()-> new UsernameNotFoundException("User not found"));
+        user.setName(request.name());
+        user.setBio(request.bio());
+
+        if(image!=null){
+            user.setPhoto(imageService.saveImage(image));
+        }
+        userRepository.save(user);
+        return "User profile successfully updated";
     }
 
     @Scheduled(cron = "0 0 12 * * MON")

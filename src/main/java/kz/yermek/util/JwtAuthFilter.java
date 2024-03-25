@@ -21,6 +21,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtTokenUtils jwtTokenUtils;
     private final CustomUserDetails customUserDetails;
+
     @Override
     protected void doFilterInternal(
             @NonNull HttpServletRequest request,
@@ -35,9 +36,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
 
         String token = authHeader.substring(7);
-        String email= jwtTokenUtils.getEmail(token);
+        String email = jwtTokenUtils.getEmail(token);
 
-        if (email != null && SecurityContextHolder.getContext().getAuthentication() == null ) {
+        if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = customUserDetails.loadUserByUsername(email);
 
             if (jwtTokenUtils.validateToken(token, userDetails)) {

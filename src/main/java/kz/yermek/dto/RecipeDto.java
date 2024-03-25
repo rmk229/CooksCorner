@@ -1,6 +1,5 @@
 package kz.yermek.dto;
 
-import kz.yermek.models.Ingredient;
 import lombok.Builder;
 
 import java.io.Serializable;

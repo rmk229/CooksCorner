@@ -8,13 +8,13 @@ import java.io.Serializable;
 import java.util.List;
 
 public record RecipeRequestDto(
-        @NotNull @NotEmpty
+
         String recipeName,
-        @NotEmpty
+
         String description,
-        @NotNull
+
         String category,
-        @NotNull
+
         String difficulty,
         String cookingTime,
         List<Ingredient> ingredients

@@ -1,5 +1,7 @@
 package kz.yermek.controllers;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -9,25 +11,30 @@ import kz.yermek.dto.UserProfileDto;
 import kz.yermek.dto.UserUpdateProfileDto;
 import kz.yermek.services.UserService;
 import kz.yermek.util.JwtTokenUtils;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.Validator;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Objects;
 
 @RestController
-@RequestMapping("api/v1/users/")
+@RequestMapping("/api/v1/users/")
+@RequiredArgsConstructor
 public class UserController {
+
     private final JwtTokenUtils tokenUtils;
     private final UserService userService;
+    private final ObjectMapper objectMapper;
+    private final Validator validator;
 
-    public UserController(JwtTokenUtils tokenUtils, UserService userService) {
-        this.tokenUtils = tokenUtils;
-        this.userService = userService;
-    }
 
     @Operation(
             summary = "Get user profile",
@@ -90,18 +97,36 @@ public class UserController {
                     @ApiResponse(responseCode = "403", description = "Authentication required")
             }
     )
-    @PutMapping("/update_profile")
-    public ResponseEntity<String> changeProfile(@RequestPart("dto") UserUpdateProfileDto dto, @RequestPart("image") MultipartFile photo, Authentication authentication) {
+    @PutMapping(value = "/update_profile")
+    public ResponseEntity<String> changeProfile(@RequestPart("dto") String dto,
+                                                @RequestPart(value = "image", required = false) MultipartFile image,
+                                                Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
         }
+
+        UserUpdateProfileDto request;
         Long currentUserId = tokenUtils.getUserIdFromAuthentication(authentication);
         try {
-            userService.changeProfile(dto, photo, currentUserId);
-            return ResponseEntity.ok("Profile updated successfully");
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to update profile: " + e.getMessage());
+            request = objectMapper.readValue(dto, UserUpdateProfileDto.class);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        validateRequest(request);
+        if (image != null) {
+            if (!Objects.requireNonNull(image.getContentType()).startsWith("image/")) {
+                throw new IllegalArgumentException("Uploaded file is not an image");
+            }
+        }
+        return ResponseEntity.ok(userService.updateUser(request, currentUserId, image));
+    }
+
+    private void validateRequest(UserUpdateProfileDto request) {
+        BindingResult bindingResult = new BeanPropertyBindingResult(request, "userUpdateProfileDto");
+        validator.validate(request, bindingResult);
+
+        if (bindingResult.hasErrors()) {
+            throw new IllegalArgumentException("Invalid input " + bindingResult.getAllErrors());
         }
     }
 }
