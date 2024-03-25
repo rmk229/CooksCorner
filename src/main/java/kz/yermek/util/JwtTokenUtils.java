@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 public class JwtTokenUtils {
     private static final String ACCESS_SECRET_KEY = "eNWhaPA+OWfE/gttYsOIA+LnqHaVOsgGgZjFEPMqZJJ5cYnVdWmoWChe+T31DwCs";
     private static final String REFRESH_SECRET_KEY = "W32iXD8bCt5jRECb5GqWu5gAMIj/QyJdH0LZKag3m3ogMJMV9bzEwGqwm6dzbliU";
+    private static final String JWT_SECRET_KEY = "DFMWu6DjAJEmtZLetpXbnQKsJqnRzTcBXlF2WF/FWwlqDxqyj8GKMoU8BnCADE7t";
 
     private static SecretKey getAccessKey() {
         return Keys.hmacShaKeyFor(ACCESS_SECRET_KEY.getBytes(StandardCharsets.UTF_8));
@@ -146,21 +147,22 @@ public class JwtTokenUtils {
 
 
     private Claims getAllClaimsFromToken(String token) {
-        try {
-            return Jwts.parserBuilder()
-                    .setSigningKey(getAccessKey())
-                    .build()
-                    .parseClaimsJws(token)
-                    .getBody();
-        } catch (ExpiredJwtException e) {
-            // Handle token expiration here
-            System.out.println("JWT token has expired: " + e.getMessage());
-            return null; // or throw a custom exception
-        } catch (Exception e) {
-            // Handle other exceptions such as invalid token format or signature
-            System.out.println("Error parsing JWT token: " + e.getMessage());
-            return null; // or throw a custom exception
-        }
+//        try {
+//            return Jwts.parserBuilder()
+//                    .setSigningKey(getAccessKey())
+//                    .build()
+//                    .parseClaimsJws(token)
+//                    .getBody();
+//        } catch (ExpiredJwtException e) {
+//            // Handle token expiration here
+//            System.out.println("JWT token has expired: " + e.getMessage());
+//            return null; // or throw a custom exception
+//        } catch (Exception e) {
+//            // Handle other exceptions such as invalid token format or signature
+//            System.out.println("Error parsing JWT token: " + e.getMessage());
+//            return null; // or throw a custom exception
+//        }
+        return Jwts.parser().setSigningKey(JWT_SECRET_KEY.getBytes()).parseClaimsJws(token).getBody();
     }
 
 

@@ -151,15 +151,6 @@ public class RecipeController {
         return ResponseEntity.ok("Recipe has been added successfully");
     }
 
-//    @PostMapping("/add-recipe")
-//    public ResponseEntity<String> addRecipe(@ModelAttribute RecipeRequestDto requestDto, @RequestPart ("photo") MultipartFile image, Authentication ){
-//        if (authentication == null || !authentication.isAuthenticated()) {
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authentication required");
-//        }
-//        Long userId = tokenUtils.getUserIdFromAuthentication(authentication);
-//        recipeService.addRecipe(requestDto, image, userId);
-//        return ResponseEntity.ok("Recipe has been added successfully");
-//    }
 
     @Operation(
             summary = "Search recipe",

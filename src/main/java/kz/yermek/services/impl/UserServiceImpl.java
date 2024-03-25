@@ -52,7 +52,6 @@ public class UserServiceImpl implements UserService {
     private final ImageService imageService;
     private final RecipeRepository recipeRepository;
     private static final String EMAIL_LINK = "https://cookscorner-production-6571.up.railway.app/api/v1/auth/confirm-email?token=";
-//    private static final String EMAIL_LINK = "http://localhost:8080/api/v1/auth/confirm-email?token=";
 
     @Override
     @Transactional

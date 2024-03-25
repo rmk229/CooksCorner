@@ -14,7 +14,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
     @Query("select u from User u where u.isEnabled = false")
     List<User> findNotEnabledUsers();
-
     @Query("SELECT c FROM User c WHERE c.name LIKE CONCAT('%', :query, '%')")
     List<User> searchUsers(@Param("query") String query);
 }
