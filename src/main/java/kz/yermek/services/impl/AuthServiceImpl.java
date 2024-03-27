@@ -51,7 +51,7 @@ public class AuthServiceImpl implements AuthService {
     private final EmailService emailService;
     private final AccessTokenRepository accessTokenRepository;
     private final TokenRepository confirmationTokenRepository;
-    private static final String EMAIL_LINK = System.getenv("EMAIL_LINK");
+    private static final String EMAIL_LINK = "https://cookscorner-production-6571.up.railway.app/api/v1/auth/confirm-email?token=";
 
     @Autowired
     public AuthServiceImpl(RoleService roleService, PasswordEncoder passwordEncoder, UserRepository userRepository, JwtTokenUtils jwtTokenUtils, TokenService confirmationTokenService, AuthenticationManager authenticationManager, EmailService emailService, AccessTokenRepository accessTokenRepository, TokenRepository confirmationTokenRepository) {
