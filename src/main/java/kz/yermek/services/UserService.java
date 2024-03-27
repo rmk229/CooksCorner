@@ -13,16 +13,13 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 public interface UserService {
-    ResponseEntity<UserResponseDto> registerUser(UserRequestDto userRequestDto);
-    ResponseEntity<JwtResponseDto> authenticate(JwtRequestDto jwtRequestDto);
-    ResponseEntity<JwtRefreshTokenDto> refreshToken(String refreshToken);
-    ResponseEntity<String> confirmEmail(String token);
-    Token generateToken(User user);
-    ResponseEntity<String> resendConfirmation(ReconfirmEmailDto emailDto);
+
     boolean isFollowed(Long userId, Long currentUserId);
+
     ResponseEntity<UserProfileDto> getUserProfile(Long userId, Long currentUserId);
+
     List<UserDto> searchUser(String query);
-    void changeProfile(UserUpdateProfileDto dto, MultipartFile photo, Long id);
+
     ResponseEntity<MyProfileDto> getOwnProfile(Long currentUserId);
 
     String updateUser(UserUpdateProfileDto request, Long currentUserId, MultipartFile image);

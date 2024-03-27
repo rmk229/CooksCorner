@@ -116,7 +116,7 @@ public class UserController {
             String responseMessage = userService.updateUser(request, currentUserId, image);
             return ResponseEntity.ok(responseMessage);
         } catch (JsonProcessingException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid profile DTO JSON: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid profile dto JSON: " + e.getMessage());
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         } catch (Exception e) {

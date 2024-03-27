@@ -1,4 +1,4 @@
 package kz.yermek.dto;
 
-public record IngredientDto (String name, String amount){
+public record IngredientDto (Long id, String name, String amount){
 }

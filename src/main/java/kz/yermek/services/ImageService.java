@@ -8,4 +8,6 @@ public interface ImageService {
     Image saveImage(MultipartFile file);
 
     void deleteUserImage(Long id);
+
+    boolean isImageFile(MultipartFile file);
 }

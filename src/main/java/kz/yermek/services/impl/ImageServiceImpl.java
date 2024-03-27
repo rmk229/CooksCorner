@@ -19,6 +19,12 @@ public class ImageServiceImpl implements ImageService {
     }
 
     @Override
+    public boolean isImageFile(MultipartFile file) {
+        String contentType = file.getContentType();
+        return contentType != null && contentType.startsWith("image/");
+    }
+
+    @Override
     @Transactional
     public Image saveImage(MultipartFile file) {
         Image image = new Image();

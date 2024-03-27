@@ -16,14 +16,14 @@ public class CloudinaryServiceImpl implements CloudinaryService {
     private final Cloudinary cloudinary;
 
     @Override
-    public String uploadFile(MultipartFile file, String folder) {
-        try {
+    public String uploadFile(MultipartFile file, String folderName) {
+        try{
             HashMap<Object, Object> options = new HashMap<>();
-            options.put("folder", folder);
+            options.put("folder", folderName);
             Map uploadedFile = cloudinary.uploader().upload(file.getBytes(), options);
             String publicId = (String) uploadedFile.get("public_id");
             return cloudinary.url().secure(true).generate(publicId);
-        } catch (IOException e) {
+        }catch (IOException e){
             e.printStackTrace();
             return null;
         }

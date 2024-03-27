@@ -54,153 +54,17 @@ public class UserServiceImpl implements UserService {
     private static final String EMAIL_LINK = "https://cookscorner-production-6571.up.railway.app/api/v1/auth/confirm-email?token=";
 
     @Override
-    @Transactional
-    public ResponseEntity<UserResponseDto> registerUser(UserRequestDto userRequestDto) {
-        if (userRepository.findByEmail(userRequestDto.email()).isPresent()) {
-            throw new EmailAlreadyExistException("Email already exist");
-        }
-
-        User user = new User();
-        user.setEnabled(false);
-        user.setEmail(userRequestDto.email());
-        user.setName(userRequestDto.name());
-
-        Role role = roleService.getUserRole().orElseThrow(() ->
-                new UserRoleNotFoundException("Role not found"));
-        user.setRoles(Collections.singletonList(role));
-        String password = userRequestDto.password();
-        String confirmPassword = userRequestDto.confirmPassword();
-
-        if (!password.equals(confirmPassword)) {
-            throw new PasswordDontMatchException("Passwords don't match");
-        }
-        user.setPassword(passwordEncoder.encode(userRequestDto.password()));
-        userRepository.save(user);
-
-        Token token = generateToken(user);
-        tokenService.saveToken(token);
-
-        String link = EMAIL_LINK + token.getToken();
-        emailService.sendConfirmationEmail(link, user);
-
-        return ResponseEntity.ok(new UserResponseDto("Successfully! Check your email for confirmation", user.getUsername()));
-    }
-
-
-    @Override
-    public ResponseEntity<JwtResponseDto> authenticate(JwtRequestDto jwtRequestDto) {
-        try {
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(jwtRequestDto.email(), jwtRequestDto.password()));
-            User user = (User) authentication.getPrincipal();
-            String accessToken = jwtTokenUtils.generateAccessToken(user);
-            String refreshToken = jwtTokenUtils.generateRefreshToken(user);
-            return ResponseEntity.ok(new JwtResponseDto(accessToken, refreshToken));
-        } catch (AuthenticationException exception) {
-            if (exception instanceof BadCredentialsException) {
-                throw new BadCredentialsException("Invalid email or password");
-            } else {
-                throw new DisabledException("User not enabled yet");
-            }
-        }
-    }
-
-    @Override
-    public ResponseEntity<JwtRefreshTokenDto> refreshToken(String refreshToken) {
-        try {
-            if (refreshToken == null) {
-                return ResponseEntity.badRequest().build();
-            }
-            String usernameFromRefreshToken = jwtTokenUtils.getEmailFromRefreshToken(refreshToken);
-            if (usernameFromRefreshToken == null) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-            }
-            User user = userRepository.findByEmail(usernameFromRefreshToken).orElseThrow(() ->
-                    new UserRoleNotFoundException("User not found"));
-
-            String accessToken = jwtTokenUtils.generateAccessToken(user);
-            return ResponseEntity.ok(new JwtRefreshTokenDto(usernameFromRefreshToken, accessToken));
-        } catch (InvalidTokenException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        } catch (UsernameNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
-    @Override
-    public ResponseEntity<String> confirmEmail(String token) {
-        Token confirmationToken = tokenService.getToken(token).orElseThrow(() -> new TokenNotFoundException("Token not found"));
-        if (confirmationToken.getConfirmedAt() != null) {
-            throw new EmailAlreadyConfirmedException("Email already confirmed");
-        }
-        LocalDateTime expiredAt = confirmationToken.getExpiresAt();
-        if (expiredAt.isBefore(LocalDateTime.now())) {
-            throw new TokenExpiredException("Token has expired");
-
-        }
-        confirmationToken.setConfirmedAt(LocalDateTime.now());
-        User user = confirmationToken.getUser();
-        user.setEnabled(true);
-        userRepository.saveAndFlush(user);
-        tokenRepository.saveAndFlush(confirmationToken);
-
-        return ResponseEntity.ok().body("Email successfully confirmed. Go back to your login page");
-    }
-
-    @Override
-    public Token generateToken(User user) {
-        String token = UUID.randomUUID().toString();
-        return new Token(
-                token,
-                LocalDateTime.now(),
-                LocalDateTime.now().plusMinutes(5),
-                null,
-                user);
-    }
-
-    @Override
-    public ResponseEntity<String> resendConfirmation(ReconfirmEmailDto emailDto) {
-        User user = userRepository.findByEmail(emailDto.email()).orElseThrow(
-                () -> new UsernameNotFoundException("User not found")
-        );
-
-        if (user.isEnabled()) {
-            throw new EmailAlreadyConfirmedException("Email already confirmed");
-        }
-
-        List<Token> confirmationTokens = tokenRepository.findByUser(user);
-        for (Token token : confirmationTokens) {
-            token.setToken(null);
-            tokenRepository.save(token);
-        }
-
-        Token newConfirmationToken = generateToken(user);
-        tokenRepository.save(newConfirmationToken);
-        String link = EMAIL_LINK + newConfirmationToken.getToken();
-        emailService.sendConfirmationEmail(link, user);
-        return ResponseEntity.ok("Successfully! Check your email to the reconfirm process :)");
-    }
-
-    @Override
-    public boolean isFollowed(Long userId, Long currentUserId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-        User currentUser = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new UsernameNotFoundException("Current user not found"));
-        List<User> followings = currentUser.getFollowings();
-        return followings.contains(user);
-    }
-
-    @Override
     public ResponseEntity<UserProfileDto> getUserProfile(Long userId, Long currentUserId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new UsernameNotFoundException("User not found"));
-        List<Recipe> recipeListDto = recipeRepository.findRecipesByUserId(userId);
+        List<Recipe> recipeListDto = recipeRepository.findRecipesPageByUserId(userId);
         boolean isFollowed = isFollowed(userId, currentUserId);
+
+        String photoUrl = (user.getPhoto() != null) ? user.getPhoto().getUrl() : "https://t4.ftcdn.net/jpg/03/32/59/65/240_F_332596535_lAdLhf6KzbW6PWXBWeIFTovTii1drkbT.jpg";
+
         UserProfileDto userProfileDto = new UserProfileDto(
-                user.getPhoto().getUrl(),
-                user.getUsername(),
+                user.getId(),
+                photoUrl,
+                user.getName(),
                 recipeListDto.size(),
                 user.getFollowers().size(),
                 user.getFollowings().size(),
@@ -209,7 +73,6 @@ public class UserServiceImpl implements UserService {
         );
         return ResponseEntity.ok(userProfileDto);
     }
-
     @Override
     public List<UserDto> searchUser(String query) {
         List<User> users = userRepository.searchUsers(query);
@@ -226,38 +89,10 @@ public class UserServiceImpl implements UserService {
         }
         return userDto;
     }
-
-    @Override
-    @Transactional
-    public void changeProfile(UserUpdateProfileDto dto, MultipartFile photo, Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-
-        user.setName(dto.name());
-        user.setBio(dto.bio());
-
-        if (photo != null && !photo.isEmpty()) {
-            try {
-                String imageUrl = imageService.saveImage(photo).getUrl();
-                Image newImage = new Image();
-                newImage.setUrl(imageUrl);
-                if (user.getPhoto() != null) {
-                    imageService.deleteUserImage(user.getPhoto().getId());
-                }
-
-                user.setPhoto(newImage);
-            } catch (Exception e) {
-                throw new RuntimeException("Failed to process image", e);
-            }
-        }
-
-        userRepository.save(user);
-    }
-
     @Override
     public ResponseEntity<MyProfileDto> getOwnProfile(Long currentUserId) {
         User user = userRepository.findById(currentUserId).orElseThrow(()-> new UsernameNotFoundException("User not found"));
-        List<Recipe> recipeListDto = recipeRepository.findRecipesByUserId(currentUserId);
+        List<Recipe> recipeListDto = recipeRepository.findRecipesPageByUserId(currentUserId);
         String photoUrl = (user.getPhoto() != null) ? user.getPhoto().getUrl() : "https://t4.ftcdn.net/jpg/03/32/59/65/240_F_332596535_lAdLhf6KzbW6PWXBWeIFTovTii1drkbT.jpg";
         MyProfileDto userProfileDto = new MyProfileDto(
                 photoUrl,
@@ -269,8 +104,8 @@ public class UserServiceImpl implements UserService {
         );
         return ResponseEntity.ok(userProfileDto);
     }
-
     @Override
+    @Transactional
     public String updateUser(UserUpdateProfileDto request, Long currentUserId, MultipartFile image) {
         User user = userRepository.findById(currentUserId).orElseThrow(()-> new UsernameNotFoundException("User not found"));
         user.setName(request.name());
@@ -282,16 +117,12 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
         return "User profile successfully updated";
     }
-
-    @Scheduled(cron = "0 0 12 * * MON")
-    private void sendWeeklyConfirmEmail() {
-        List<User> users = userRepository.findNotEnabledUsers();
-        for (User user : users) {
-            Token confirmationToken = generateToken(user);
-            tokenService.saveToken(confirmationToken);
-
-            String link = EMAIL_LINK + confirmationToken.getToken();
-            emailService.sendConfirmationEmail(link, user);
-        }
+    public boolean isFollowed(Long userId, Long currentUserId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        User currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new UsernameNotFoundException("Current user not found"));
+        List<User> followings = currentUser.getFollowings();
+        return followings.contains(user);
     }
 }

@@ -9,6 +9,7 @@ import kz.yermek.dto.RecipeDto;
 import kz.yermek.dto.RecipeListDto;
 import kz.yermek.dto.request.RecipeRequestDto;
 import kz.yermek.enums.Category;
+import kz.yermek.services.ImageService;
 import kz.yermek.services.RecipeService;
 import kz.yermek.util.JsonValidator;
 import kz.yermek.util.JwtTokenUtils;
@@ -30,6 +31,7 @@ public class RecipeController {
     private final JwtTokenUtils tokenUtils;
     private final ObjectMapper objectMapper;
     private final JsonValidator jsonValidator;
+    private final ImageService imageService;
 
     @Operation(
             summary = "Get recipes by category",
@@ -42,6 +44,8 @@ public class RecipeController {
     )
     @GetMapping("/get-by-category")
     public ResponseEntity<List<RecipeListDto>> getRecipes(@RequestParam(value = "category") String category,
+                                                          @RequestParam(value = "page", defaultValue = "0") int page,
+                                                          @RequestParam(value = "size", defaultValue = "12") int size,
                                                           Authentication authentication) {
 
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -51,7 +55,7 @@ public class RecipeController {
         String upperCaseCategory = category.toUpperCase();
         try {
             Category categoryEnum = Category.valueOf(upperCaseCategory);
-            return recipeService.getByCategory(categoryEnum, userId);
+            return recipeService.getByCategory(categoryEnum, userId, page, size);
         } catch (IllegalArgumentException exception) {
             throw new IllegalArgumentException(exception.getMessage());
         }
@@ -67,15 +71,18 @@ public class RecipeController {
             }
     )
     @GetMapping("/my-recipes")
-    public ResponseEntity<List<RecipeListDto>> getMyRecipes(Authentication authentication) {
+    public ResponseEntity<List<RecipeListDto>> getMyRecipes(@RequestParam(value = "page", defaultValue = "0") int page,
+                                                            @RequestParam(value = "size", defaultValue = "12") int size,
+                                                            Authentication authentication) {
 
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
         }
         Long userId = tokenUtils.getUserIdFromAuthentication(authentication);
 
-        return recipeService.getMyRecipe(userId);
+        return recipeService.getMyRecipe(userId, page, size);
     }
+
 
 
     @Operation(
@@ -89,13 +96,15 @@ public class RecipeController {
     )
 
     @GetMapping("/my-flagged-recipes")
-    public ResponseEntity<List<RecipeListDto>> getMyFlaggedRecipes(Authentication authentication) {
+    public ResponseEntity<List<RecipeListDto>> getMyFlaggedRecipes(Authentication authentication,
+                                                                   @RequestParam(value = "page", defaultValue = "0") int page,
+                                                                   @RequestParam(value = "size", defaultValue = "12") int size) {
 
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
         }
         Long userId = tokenUtils.getUserIdFromAuthentication(authentication);
-        return recipeService.getMyFlaggedRecipe(userId);
+        return recipeService.getMyFlaggedRecipe(userId,  page, size);
     }
 
     @Operation(
@@ -109,14 +118,18 @@ public class RecipeController {
     )
 
     @GetMapping("/get-recipes-by-userId/{userId}")
-    public ResponseEntity<List<RecipeListDto>> getRecipesByUserId(Authentication authentication,  @PathVariable(name = "userId") Long userId) {
+    public ResponseEntity<List<RecipeListDto>> getRecipesByUserId(Authentication authentication,
+                                                                  @PathVariable(name = "userId") Long userId,
+                                                                  @RequestParam(value = "page", defaultValue = "0") int page,
+                                                                  @RequestParam(value = "size", defaultValue = "12") int size) {
 
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
         }
         Long currentUserId = tokenUtils.getUserIdFromAuthentication(authentication);
-        return recipeService.getRecipesByUserId(userId, currentUserId);
+        return recipeService.getRecipesByUserId(userId, currentUserId, page, size);
     }
+
 
     @Operation(
             summary = "Get detailed page of the recipe",
@@ -157,7 +170,7 @@ public class RecipeController {
             Long userId = tokenUtils.getUserIdFromAuthentication(authentication);
             RecipeRequestDto requestDto = objectMapper.readValue(recipeDto, RecipeRequestDto.class);
             jsonValidator.validateRecipeRequest(requestDto);
-            if (image == null || image.isEmpty() || !isImageFile(image)) {
+            if (image == null || image.isEmpty() || !imageService.isImageFile(image)) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid image file");
             }
             recipeService.addRecipe(requestDto, image, userId);
@@ -171,10 +184,7 @@ public class RecipeController {
         }
     }
 
-    private boolean isImageFile(MultipartFile file) {
-        String contentType = file.getContentType();
-        return contentType != null && contentType.startsWith("image/");
-    }
+
 
 
     @Operation(
@@ -192,6 +202,6 @@ public class RecipeController {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
         }
         Long userId = tokenUtils.getUserIdFromAuthentication(authentication);
-        return ResponseEntity.ok(recipeService.searchRecipes(query, userId));
+        return recipeService.searchRecipes(query, userId);
     }
 }

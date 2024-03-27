@@ -5,6 +5,6 @@ import lombok.Builder;
 import java.io.Serializable;
 
 @Builder
-public record UserProfileDto(String imageUrl, String name, int recipeQuantity, int followerQuantity, int followingQuantity, String bio,  boolean isFollowed) implements Serializable {
+public record UserProfileDto(Long id, String imageUrl, String name, int recipeQuantity, int followerQuantity, int followingQuantity, String bio,  boolean isFollowed) implements Serializable {
 
 }

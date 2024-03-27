@@ -13,6 +13,7 @@ import kz.yermek.dto.request.JwtRequestDto;
 import kz.yermek.dto.request.UserRequestDto;
 import kz.yermek.dto.response.JwtResponseDto;
 import kz.yermek.dto.response.UserResponseDto;
+import kz.yermek.services.AuthService;
 import kz.yermek.services.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.*;
 @CrossOrigin(origins = "*", maxAge = 3600)
 public class AuthController {
     private final UserService userService;
+    private final AuthService authService;
 
     @Operation(
             summary = "Login",
@@ -38,7 +40,7 @@ public class AuthController {
     })
     @PostMapping("/login")
     public ResponseEntity<JwtResponseDto> login(@RequestBody JwtRequestDto authRequest) {
-        return userService.authenticate(authRequest);
+        return authService.authenticate(authRequest);
     }
 
     @Operation(
@@ -55,7 +57,7 @@ public class AuthController {
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<UserResponseDto> register(@Valid @RequestBody UserRequestDto registrationUserDto) {
-        return userService.registerUser(registrationUserDto);
+        return authService.registerUser(registrationUserDto);
     }
 
     @Operation(
@@ -71,7 +73,7 @@ public class AuthController {
 
     @PostMapping("/refresh-token")
     public ResponseEntity<JwtRefreshTokenDto> refreshToken(@RequestParam("refreshToken") String refreshToken) {
-        return userService.refreshToken(refreshToken);
+        return authService.refreshToken(refreshToken);
     }
 
     @Operation(
@@ -88,7 +90,7 @@ public class AuthController {
     @Hidden
     @GetMapping("/confirm-email")
     public ResponseEntity<String> confirmEmail(@RequestParam("token") String token) {
-        return userService.confirmEmail(token);
+        return authService.confirmEmail(token);
     }
 
     @Operation(
@@ -104,23 +106,7 @@ public class AuthController {
     @Hidden
     @PostMapping("/reconfirm-email")
     public ResponseEntity<String> reconfirm(@RequestBody ReconfirmEmailDto dto) {
-        return userService.resendConfirmation(dto);
+        return authService.resendConfirmation(dto);
     }
 
-    @Operation(
-            summary = "Logout",
-            description = "To logout from the system using this endpoint"
-    )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Logged out successfully"),
-
-    })
-    @GetMapping("/logout")
-    public ResponseEntity<String> logout(HttpServletRequest request) {
-        HttpSession session = request.getSession(false);
-        if (session != null) {
-            session.invalidate();
-        }
-        return ResponseEntity.status(HttpStatus.OK).body("Logged out successfully");
-    }
 }

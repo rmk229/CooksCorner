@@ -10,18 +10,20 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class RoleInitializer implements ApplicationRunner {
-
-    private final RoleRepository roleRepository;
+    private final RoleRepository rolesRepository;
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
-        if (!roleRepository.existsByName("ROLE_USER")) {
-            Role role = new Role(null, "Role for users", "ROLE_USER");
-            roleRepository.save(role);
+
+        if (!rolesRepository.existsByName("ROLE_USER")) {
+
+            Role roleUser = new Role(null, "This role is for users.", "ROLE_USER");
+            rolesRepository.save(roleUser);
         }
-        if (!roleRepository.existsByName("ROLE_ADMIN")) {
-            Role role = new Role(null, "Role for admins", "ROLE_ADMIN");
-            roleRepository.save(role);
+        if (!rolesRepository.existsByName("ROLE_ADMIN")) {
+
+            Role roleUser = new Role(null, "This role is for admins.", "ROLE_ADMIN");
+            rolesRepository.save(roleUser);
         }
     }
 }
