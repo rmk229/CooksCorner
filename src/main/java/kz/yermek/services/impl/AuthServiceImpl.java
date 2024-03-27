@@ -51,7 +51,7 @@ public class AuthServiceImpl implements AuthService {
     private final EmailService emailService;
     private final AccessTokenRepository accessTokenRepository;
     private final TokenRepository confirmationTokenRepository;
-    private static final String CONFIRM_EMAIL_LINK = System.getenv("CONFIRM_EMAIL_LINK");
+    private static final String EMAIL_LINK = "https://cookscorner-production-6571.up.railway.app/api/v1/auth/confirm-email?token=";
 
     @Autowired
     public AuthServiceImpl(RoleService roleService, PasswordEncoder passwordEncoder, UserRepository userRepository, JwtTokenUtils jwtTokenUtils, TokenService confirmationTokenService, AuthenticationManager authenticationManager, EmailService emailService, AccessTokenRepository accessTokenRepository, TokenRepository confirmationTokenRepository) {
@@ -89,7 +89,7 @@ public class AuthServiceImpl implements AuthService {
         userRepository.save(user);
         Token confirmationToken = generateConfirmToken(user);
         confirmationTokenService.saveToken(confirmationToken);
-        String link = CONFIRM_EMAIL_LINK + confirmationToken.getToken();
+        String link = EMAIL_LINK + confirmationToken.getToken();
         emailService.sendConfirmationEmail(link, user);
         return ResponseEntity.ok(new UserResponseDto("Success! Please, check your email for the confirmation", user.getUsername()));
     }
@@ -97,13 +97,12 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public Token generateConfirmToken(User user) {
         String token = UUID.randomUUID().toString();
-        Token confirmationToken = new Token(
+        return new Token(
                 token,
                 LocalDateTime.now(),
                 LocalDateTime.now().plusMinutes(5),
                 null,
                 user);
-        return confirmationToken;
     }
 
     @Override
@@ -208,7 +207,7 @@ public class AuthServiceImpl implements AuthService {
 
         Token newConfirmationToken = generateConfirmToken(user);
         confirmationTokenRepository.save(newConfirmationToken);
-        String link = CONFIRM_EMAIL_LINK + newConfirmationToken.getToken();
+        String link = EMAIL_LINK + newConfirmationToken.getToken();
         emailService.sendConfirmationEmail(link, user);
         return ResponseEntity.ok("Success! Please, check your email for the re-confirmation");
     }
@@ -219,7 +218,7 @@ public class AuthServiceImpl implements AuthService {
         for(User user: users){
             Token confirmationToken = generateConfirmToken(user);
             confirmationTokenService.saveToken(confirmationToken);
-            String link = CONFIRM_EMAIL_LINK + confirmationToken.getToken();
+            String link = EMAIL_LINK + confirmationToken.getToken();
             emailService.sendConfirmationEmail(link, user);
         }
     }
