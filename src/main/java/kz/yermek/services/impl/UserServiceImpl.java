@@ -51,7 +51,7 @@ public class UserServiceImpl implements UserService {
     private final TokenRepository tokenRepository;
     private final ImageService imageService;
     private final RecipeRepository recipeRepository;
-    private static final String EMAIL_LINK = "https://cookscorner-production-6571.up.railway.app/api/v1/auth/confirm-email?token=";
+//    private static final String EMAIL_LINK = "https://cookscorner-production-6571.up.railway.app/api/v1/auth/confirm-email?token=";
 
     @Override
     public ResponseEntity<UserProfileDto> getUserProfile(Long userId, Long currentUserId) {
