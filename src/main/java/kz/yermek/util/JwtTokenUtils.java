@@ -19,7 +19,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Component
-@RequiredArgsConstructor
 public class JwtTokenUtils {
     private static final String ACCESS_SECRET_KEY = "eNWhaPA+OWfE/gttYsOIA+LnqHaVOsgGgZjFEPMqZJJ5cYnVdWmoWChe+T31DwCs";
     private static final String REFRESH_SECRET_KEY = "W32iXD8bCt5jRECb5GqWu5gAMIj/QyJdH0LZKag3m3ogMJMV9bzEwGqwm6dzbliU";

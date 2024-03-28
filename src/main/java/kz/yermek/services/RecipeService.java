@@ -13,14 +13,12 @@ import java.util.List;
 
 public interface RecipeService {
     Recipe addRecipe(RecipeRequestDto requestDto, MultipartFile image, Long userId);
-
-    ResponseEntity<List<RecipeListDto>> getByCategory(Category category, Long userId,int page, int size);
-
+    ResponseEntity<List<RecipeListDto>> getByCategory(Category category, Long userId);
     RecipeDto getRecipeById(Long recipeId, Long userId);
     boolean isLiked(Long recipeId, Long userId);
     boolean isSaved(Long recipeId, Long userId);
     ResponseEntity<List<RecipeListDto>> searchRecipes(String query, Long userId);
-    ResponseEntity<List<RecipeListDto>> getMyRecipe(Long userId, int page, int size);
-    ResponseEntity<List<RecipeListDto>> getMyFlaggedRecipe(Long userId, int page, int size);
-    ResponseEntity<List<RecipeListDto>> getRecipesByUserId(Long userId, Long currentUserId, int page, int size);
+    ResponseEntity<List<RecipeListDto>> getMyRecipe(Long userId);
+    ResponseEntity<List<RecipeListDto>> getMyFlaggedRecipe(Long userId);
+    ResponseEntity<List<RecipeListDto>> getRecipesByUserId(Long userId, Long currentUserId);
 }

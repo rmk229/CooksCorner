@@ -55,7 +55,7 @@ public class RecipeController {
         String upperCaseCategory = category.toUpperCase();
         try {
             Category categoryEnum = Category.valueOf(upperCaseCategory);
-            return recipeService.getByCategory(categoryEnum, userId, page, size);
+            return recipeService.getByCategory(categoryEnum, userId);
         } catch (IllegalArgumentException exception) {
             throw new IllegalArgumentException(exception.getMessage());
         }
@@ -80,7 +80,7 @@ public class RecipeController {
         }
         Long userId = tokenUtils.getUserIdFromAuthentication(authentication);
 
-        return recipeService.getMyRecipe(userId, page, size);
+        return recipeService.getMyRecipe(userId);
     }
 
 
@@ -104,7 +104,7 @@ public class RecipeController {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
         }
         Long userId = tokenUtils.getUserIdFromAuthentication(authentication);
-        return recipeService.getMyFlaggedRecipe(userId,  page, size);
+        return recipeService.getMyFlaggedRecipe(userId);
     }
 
     @Operation(
@@ -127,7 +127,7 @@ public class RecipeController {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
         }
         Long currentUserId = tokenUtils.getUserIdFromAuthentication(authentication);
-        return recipeService.getRecipesByUserId(userId, currentUserId, page, size);
+        return recipeService.getRecipesByUserId(userId, currentUserId);
     }
 
 

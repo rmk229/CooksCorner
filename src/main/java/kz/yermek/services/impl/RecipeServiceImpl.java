@@ -62,10 +62,8 @@ public class RecipeServiceImpl implements RecipeService {
     }
 
     @Override
-    public ResponseEntity<List<RecipeListDto>> getByCategory(Category category, Long userId, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        Page<Recipe> recipePage = recipeRepository.findPopularRecipes(category, pageable);
-        List<Recipe> recipes = recipePage.getContent();
+    public ResponseEntity<List<RecipeListDto>> getByCategory(Category category, Long userId) {
+        List<Recipe> recipes = recipeRepository.findPopularRecipes(category);
         return ResponseEntity.ok(recipeMapper.toRecipeListDtoList(recipes, userId));
     }
 
@@ -96,34 +94,26 @@ public class RecipeServiceImpl implements RecipeService {
     }
 
     @Override
-    public ResponseEntity<List<RecipeListDto>> getMyRecipe(Long userId, int page, int size) {
+    public ResponseEntity<List<RecipeListDto>> getMyRecipe(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(() ->
                 new UsernameNotFoundException("User not found"));
-
-        Pageable pageable = PageRequest.of(page, size);
-        Page<Recipe> recipePage  = recipeRepository.findRecipesPageByUserId(user.getId(), pageable);
-        List<Recipe> recipes = recipePage.getContent();
+        List<Recipe> recipes  = recipeRepository.findRecipesPageByUserId(user.getId());
         return ResponseEntity.ok(recipeMapper.toRecipeListDtoList(recipes, user.getId()));
     }
 
     @Override
-    public ResponseEntity<List<RecipeListDto>> getMyFlaggedRecipe(Long userId, int page, int size) {
+    public ResponseEntity<List<RecipeListDto>> getMyFlaggedRecipe(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(() ->
                 new UsernameNotFoundException("User not found"));
-        Pageable pageable = PageRequest.of(page, size);
-        Page<Recipe> recipePage = recipeRepository.findFlaggedRecipes(user.getId(), pageable);
-        List<Recipe> recipes = recipePage.getContent();
+        List<Recipe> recipes = recipeRepository.findFlaggedRecipes(user.getId());
         return ResponseEntity.ok(recipeMapper.toRecipeListDtoList(recipes, user.getId()));
-
     }
 
     @Override
-    public ResponseEntity<List<RecipeListDto>> getRecipesByUserId(Long userId, Long currentUserId, int page, int size) {
+    public ResponseEntity<List<RecipeListDto>> getRecipesByUserId(Long userId, Long currentUserId) {
         User user = userRepository.findById(userId).orElseThrow(() ->
                 new UsernameNotFoundException("User not found"));
-        Pageable pageable = PageRequest.of(page, size);
-        Page<Recipe> recipePage  = recipeRepository.findRecipesPageByUserId(user.getId(), pageable);
-        List<Recipe> recipes = recipePage.getContent();
+        List<Recipe> recipes  = recipeRepository.findRecipesPageByUserId(user.getId());
         return ResponseEntity.ok(recipeMapper.toRecipeListDtoList(recipes, currentUserId));
     }
 }

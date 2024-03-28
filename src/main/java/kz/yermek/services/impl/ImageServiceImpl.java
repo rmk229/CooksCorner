@@ -5,18 +5,17 @@ import kz.yermek.models.Image;
 import kz.yermek.repositories.ImageRepository;
 import kz.yermek.services.CloudinaryService;
 import kz.yermek.services.ImageService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
+@RequiredArgsConstructor
 public class ImageServiceImpl implements ImageService {
+
     private final ImageRepository imageRepository;
     private final CloudinaryService cloudinaryService;
 
-    public ImageServiceImpl(ImageRepository imageRepository, CloudinaryService cloudinaryService) {
-        this.imageRepository = imageRepository;
-        this.cloudinaryService = cloudinaryService;
-    }
 
     @Override
     public boolean isImageFile(MultipartFile file) {
@@ -29,7 +28,6 @@ public class ImageServiceImpl implements ImageService {
     public Image saveImage(MultipartFile file) {
         Image image = new Image();
         try {
-
             image.setUrl(cloudinaryService.uploadFile(file, "Recipes picture"));
             imageRepository.save(image);
         }catch (Exception exception){
